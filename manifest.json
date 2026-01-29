@@ -1,0 +1,31 @@
+{
+  "manifest_version": 3,
+  "name": "Gemini & MyAnimeList Bridge",
+  "version": "1.0",
+  "description": "Injects MyAnimeList context into Google Gemini chats.",
+  "permissions": ["storage", "activeTab", "scripting", "tabs"],
+  "host_permissions": ["https://api.myanimelist.net/*"],
+  "action": {
+    "default_popup": "src/popup/popup.html",
+    "default_icon": {
+      "16": "assets/icons/icon16.png",
+      "48": "assets/icons/icon48.png",
+      "128": "assets/icons/icon128.png"
+    }
+  },
+  "icons": {
+    "16": "assets/icons/icon16.png",
+    "48": "assets/icons/icon48.png",
+    "128": "assets/icons/icon128.png"
+  },
+  "background": {
+    "service_worker": "src/background/background.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://gemini.google.com/*"],
+      "js": ["src/content/injector.js"]
+    }
+  ]
+}

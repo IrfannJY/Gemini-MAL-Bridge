@@ -1,0 +1,36 @@
+# Development files
+.DS_Store
+Thumbs.db
+*.log
+*.swp
+*.swo
+*~
+
+# Editor directories and files
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+
+# Node modules (if using npm for development)
+node_modules/
+
+# Build artifacts
+dist/
+build/
+
+# Environment variables
+.env
+.env.local
+
+# Chrome extension specific
+*.pem
+*.crx
+*.zip
+
+# OS specific
+.DS_Store
+.AppleDouble
+.LSOverride
+.Spotlight-V100
+.Trashes

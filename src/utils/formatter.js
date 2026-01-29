@@ -1,0 +1,191 @@
+/**
+ * Simple String Hash Function for Diffing (DJB2)
+ * @param {string} str 
+ * @returns {number}
+ */
+export function simpleHash(str) {
+    let hash = 5381;
+    for (let i = 0; i < str.length; i++) {
+        hash = (hash * 33) ^ str.charCodeAt(i);
+    }
+    return hash >>> 0; // Ensure unsigned 32-bit integer
+}
+
+/**
+ * Generates the specific Shadow Prompt for injection.
+ * @param {Object} data - The stored user data including anime lists.
+ * @returns {string} - The formatted shadow prompt.
+ */
+// Helper: Clean Franchise Titles
+function cleanTitle(title) {
+    return title.split(':')[0].split(' Season')[0].split(' Part')[0].trim();
+}
+
+/**
+ * Generates the Shadow Prompt for Gemini.
+ * Uses an English skeleton for better reasoning, with dynamic output language rules.
+ * @param {Object} data - User data (watching, history, favorites).
+ * @param {string} language - Target output language code ('tr', 'en', etc.). Default: 'tr'.
+ */
+export function generateShadowPrompt(data, language = 'tr') {
+    const watching = data.anime_list_watching || [];
+    const history = data.anime_list_history || [];
+    const favorites = data.anime_list_favorites || [];
+
+    // --- 1. DYNAMIC LANGUAGE INSTRUCTION ---
+    let languageInstruction = "";
+    // Check if language starts with 'tr' (e.g. 'tr-TR')
+    if (language.startsWith('tr')) {
+        languageInstruction = `
+        - **OUTPUT LANGUAGE:** TURKISH (Türkçe).
+        - **TONE:** Use authentic Turkish anime community slang (e.g., "Efsane", "Çöp", "Hype", "Duygu sömürüsü").
+        - **STYLE:** Act like a Turkish "Nakama" (Close friend).
+        `;
+    } else {
+        languageInstruction = `
+        - **OUTPUT LANGUAGE:** ENGLISH.
+        - **TONE:** Use casual anime community slang (e.g., "Goated", "Trash", "Hype", "Feels").
+        - **STYLE:** Act like an English-speaking "Nakama" (Close friend).
+        `;
+    }
+
+    // --- 2. DATA FORMATTING (Language Agnostic / English Labels) ---
+
+    // WATCHING
+    const listText = watching.map(item => {
+        const title = item.title;
+        const watched = item.episodes_watched;
+        const score = item.score > 0 ? `(Score: ${item.score})` : "(Score: -)";
+        return `- ${title}: Ep ${watched} ${score}`;
+    }).join("\n");
+
+    // FAVORITES
+    const favText = favorites.map(item => {
+        const title = item.node ? item.node.title : (item.title || "Unknown"); 
+        const score = item.list_status ? item.list_status.score : (item.score || "?");
+        return `- ${title} (Score: ${score} ⭐)`;
+    }).join("\n");
+
+    // HISTORY (Deduplicated)
+    const seenFranchises = new Set();
+    const historyText = history.reduce((acc, item) => {
+        const simpleTitle = cleanTitle(item.title);
+        if (seenFranchises.has(simpleTitle)) return acc;
+        seenFranchises.add(simpleTitle);
+        
+        const dateStr = item.updated_at_formatted || "??.??.????";
+        const scoreStr = item.score > 0 ? ` (Score: ${item.score})` : '';
+        // Keeping status codes in English (completed, watching) is usually fine for context
+        acc.push(`- ${item.title} [${dateStr}]: ${item.status}${scoreStr}`);
+        return acc;
+    }, []).slice(0, 15).join("\n");
+
+    // --- 3. PROMPT ASSEMBLY (English Skeleton) ---
+    return `
+--- 🛡️ HIDDEN SYSTEM CONTEXT (SHADOW MODE) ---
+[System Notification: Live MyAnimeList Data Injected]
+
+👤 **USER PROFILE:**
+
+▶️ **CURRENTLY WATCHING:**
+${listText}
+
+🏆 **TASTE REFERENCES (Top Rated):**
+${favText}
+*(Note: Use these to understand the user's taste palette.)*
+
+🕒 **RECENT ACTIVITY:**
+${historyText}
+
+⚙️ **MANDATORY INSTRUCTIONS:**
+1. **Context Integration:** Merge this data with your existing memory. This is the single source of truth.
+2. **Memory Update:** If there are conflicts with previous data (e.g., episode counts), **overwrite** with this new data.
+3. **Context Preservation:** Do NOT delete personal details or chat history the user shared previously. Only update anime data.
+4. **Spoiler Shield:** NEVER discuss events beyond the "Episodes Watched" count.
+${languageInstruction}
+
+--- END OF CONTEXT (Please reply to the user's message above) ---
+`;
+}
+
+export function generatePlanToWatchPrompt(ptwList, limit = 50, language = 'tr') {
+    if (!ptwList || ptwList.length === 0) return "No planned anime found.";
+
+    // --- DYNAMIC LANGUAGE INSTRUCTION ---
+    let languageInstruction = "";
+    if (language.startsWith('tr')) {
+        languageInstruction = `
+        - **OUTPUT LANGUAGE:** TURKISH (Türkçe).
+        - **TONE:** Enthusiastic, encouraging.
+        - **STYLE:** Act like a Turkish "Nakama".
+        `;
+    } else {
+        languageInstruction = `
+        - **OUTPUT LANGUAGE:** ENGLISH.
+        - **TONE:** Enthusiastic, encouraging.
+        - **STYLE:** Act like an English-speaking "Nakama".
+        `;
+    }
+
+    // Sort by Score (Desc) then Randomize slightly? 
+    // User asked for "Highest Score" logic.
+    // MAL API returns data wrapped in a 'node' object: { node: { title:..., mean:... } }
+    const sorted = [...ptwList].sort((a, b) => {
+        const meanA = a.node?.mean || 0;
+        const meanB = b.node?.mean || 0;
+        return meanB - meanA;
+    });
+
+    const sliced = sorted.slice(0, limit);
+
+    const listText = sliced.map(item => {
+        const node = item.node || {};
+        const score = node.mean ? `(Score: ${node.mean})` : "";
+        const type = node.media_type ? `[${node.media_type.toUpperCase()}]` : "";
+        return `- ${node.title} ${type} ${score}`;
+    }).join("\n");
+
+    return `
+--- 📜 PLANNED ANIME (PLAN TO WATCH) ---
+[SYSTEM NOTIFICATION: User shared their plan to watch list.]
+(Top ${sliced.length} highest rated out of ${ptwList.length} total)
+
+${listText}
+
+⚙️ **INSTRUCTIONS:**
+This list contains series the user has *not watched yet* but is interested in.
+1. If you recommend something from this list, say "It's already in your plan, start it now!".
+2. Analyze the user's taste based on genres here.
+${languageInstruction}
+--- END OF LIST ---
+`;
+}
+
+export function generatePlanToWatchPrompt(ptwList, limit = 50) {
+    if (!ptwList || ptwList.length === 0) return "Planlanmış anime bulunamadı.";
+
+    // Sort by Score (Desc) then Randomize slightly? 
+    // User asked for "Highest Score" logic.
+    const sorted = [...ptwList].sort((a, b) => (b.mean || 0) - (a.mean || 0));
+    const sliced = sorted.slice(0, limit);
+
+    const listText = sliced.map(item => {
+        const score = item.mean ? `(Puan: ${item.mean})` : "";
+        const type = item.media_type ? `[${item.media_type.toUpperCase()}]` : "";
+        return `- ${item.title} ${type} ${score}`;
+    }).join("\n");
+
+    return `
+--- 📜 PLANLANMIŞ ANİMELER (PLAN TO WATCH) ---
+[SİSTEM BİLDİRİMİ: Kullanıcı izleme listesini paylaştı.]
+(Toplam ${ptwList.length} seriden en yüksek puanlı ${sliced.length} tanesi)
+
+${listText}
+
+⚙️ **YÖNERGE:**
+Bu liste kullanıcının *henüz izlemediği* ama merak ettiği serilerdir. Öneri yaparken bu listeyi kontrol et:
+1. Eğer önerdiğin seri buradaysa "Zaten plan listende var, hemen başla!" de.
+2. Buradaki türlere bakarak kullanıcının zevkini analiz et.
+--- LİSTE SONU ---
+`;
+}

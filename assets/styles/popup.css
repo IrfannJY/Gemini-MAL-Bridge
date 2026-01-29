@@ -1,0 +1,254 @@
+:root {
+  --bg-color: #1e1f20;
+  --text-color: #e3e3e3;
+  --secondary-text: #c4c7c5;
+  --accent-color: #a8c7fa;
+
+  --item-bg: #2b2c30;
+  --input-bg: #1e1f20;
+  --input-border: #444746;
+  
+  --primary-color: #a8c7fa;
+  --primary-hover: #b9d1fa;
+  --button-text: #0b57d0;
+
+  --switch-bg: #444746;
+  --switch-on: #a8c7fa;
+  --switch-handle: #ffffff;
+  
+  --diff-bg: #36373b;
+  --diff-border: #444746;
+}
+
+body {
+  width: 320px;
+  margin: 0;
+  padding: 0;
+  font-family: 'Google Sans', 'Roboto', sans-serif;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  transition: background-color 0.3s, color 0.3s;
+}
+
+.container {
+  padding: 16px; 
+  display: flex;
+  flex-direction: column;
+  gap: 8px; 
+}
+
+/* Header & Logo */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 0px; 
+}
+
+.header img {
+  width: 36px;
+  height: 36px;
+}
+
+.header h1 {
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0;
+  background: linear-gradient(to right, #039fac, #f9b127);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Settings Card (Merged) */
+.settings {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  background: var(--item-bg);
+  padding: 16px;
+  border-radius: 18px;
+}
+
+.setting-row {
+  display: flex;
+  flex-direction: column;
+}
+
+label {
+  font-size: 13px; 
+  font-weight: 500;
+  color: var(--secondary-text);
+  margin-bottom: 6px; 
+  display: block;
+}
+
+/* Form Elements */
+input, select {
+  padding: 10px 12px;
+  border: 1px solid var(--input-border);
+  background-color: var(--input-bg);
+  color: var(--text-color);
+  border-radius: 8px;
+  font-size: 14px;
+  transition: border-color 0.2s;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23a8c7fa%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E');
+  background-repeat: no-repeat;
+  background-position: right 16px center; 
+  background-size: 10px;
+  padding-right: 32px; 
+  cursor: pointer;
+}
+
+input:focus, select:focus {
+  border-color: var(--primary-color);
+  outline: none;
+}
+
+input::placeholder {
+    color: #777;
+}
+
+/* Primary Button */
+button.primary-btn {
+  padding: 12px;
+  background: linear-gradient(to right, #039fac, #f9b127, #039fac);
+  background-size: 200% auto;
+  background-position: left center;
+  color: white;
+  border: none;
+  border-radius: 24px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background-position 0.4s ease, transform 0.2s, box-shadow 0.3s;
+  width: 100%;
+  font-size: 14px;
+  margin-top: 8px;
+}
+
+button.primary-btn:hover {
+  background-position: right center;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(249, 177, 39, 0.5);
+}
+
+button.primary-btn:disabled {
+  background: var(--switch-bg);
+  color: var(--secondary-text);
+  cursor: not-allowed;
+  background-size: 100% auto;
+}
+
+/* Status Messages */
+.status {
+  font-size: 12px;
+  text-align: center;
+  min-height: 0;
+  margin-top: -8px; 
+}
+.status.error { color: #f2b8b5; }
+.status.success { color: #81c995; }
+.status.info { color: #8ab4f8; }
+
+/* Diff Box (Bridge Specific) */
+.diff-box {
+  background: var(--diff-bg);
+  border: 1px solid var(--diff-border);
+  border-radius: 12px;
+  padding: 12px;
+}
+
+/* Footer Section */
+.footer {
+  margin-top: 4px; 
+  border-top: 1px solid var(--switch-bg);
+  padding-top: 8px; 
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.creator-container {
+  font-size: 13px; 
+  color: var(--secondary-text);
+  font-weight: 500;
+}
+
+.creator-name {
+  font-weight: 700;
+  background: linear-gradient(to right, #039fac, #f9b127);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.donate-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: rgba(255, 221, 0, 0.15); 
+  border: 1px solid rgba(255, 221, 0, 0.4);
+  color: #ffeba1;
+  text-decoration: none;
+  font-size: 12px; 
+  font-weight: 500;
+  padding: 6px 12px;
+  border-radius: 100px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  letter-spacing: 0.3px;
+}
+
+.donate-button:hover {
+  background: rgba(255, 221, 0, 0.25);
+  border-color: #ffdd00;
+  color: #ffdd00;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 221, 0, 0.25);
+}
+
+.bmc-icon {
+  width: 14px;
+  height: 14px;
+  object-fit: contain;
+  transition: transform 0.3s ease;
+}
+
+.donate-button:hover .bmc-icon {
+  transform: scale(1.1) rotate(-8deg);
+}
+
+/* Input Wrapper for Password Toggle */
+.input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-wrapper input {
+  padding-right: 40px; 
+}
+
+.eye-icon {
+  position: absolute;
+  right: 12px;
+  cursor: pointer;
+  font-size: 16px;
+  opacity: 0.6;
+  transition: opacity 0.2s;
+  user-select: none; 
+}
+
+.eye-icon:hover {
+  opacity: 1;
+}

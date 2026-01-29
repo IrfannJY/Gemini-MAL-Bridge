@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gemini-MAL Bridge Settings</title>
+    <link rel="stylesheet" href="../../assets/styles/popup.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <img src="../../assets/icons/icon48.png" alt="Logo">
+            <h1>Gemini & MAL Bridge</h1>
+        </div>
+
+
+
+        <!-- Settings Card (Merged) -->
+        <div class="settings">
+            <!-- Client ID -->
+            <div class="setting-row">
+                <label for="clientId">MAL Client ID <a href="https://myanimelist.net/apiconfig" target="_blank" style="text-decoration: none; color: var(--primary-color);">ℹ️</a></label>
+                
+                <div class="input-wrapper">
+                    <input type="password" id="clientId" placeholder="Enter MAL Client ID">
+                    <span id="toggleClientId" class="eye-icon" title="Göster/Gizle">👁️</span>
+                </div>
+            </div>
+            
+            <!-- Username -->
+            <div class="setting-row">
+                <label for="username">MAL Username</label>
+                <input type="text" id="username" placeholder="Enter MAL Username">
+            </div>
+
+            <!-- Language -->
+            <div class="setting-row">
+                <label for="languageSelect">Language / Dil</label>
+                <select id="languageSelect">
+                    <option value="auto">Otomatik (Tarayıcı Dili)</option>
+                    <option value="tr">Türkçe</option>
+                    <option value="en">English</option>
+                </select>
+            </div>
+            
+            <!-- Target URL -->
+            <div class="setting-row">
+                <label for="targetUrl">Target Chat URL (Shadow Mode)</label>
+                <input type="text" id="targetUrl" placeholder="https://gemini.google.com/app/...">
+            </div>
+
+            <button id="saveBtn" class="primary-btn">Save & Sync</button>
+        </div>
+
+        <!-- Status & Diffs -->
+        <div id="status" class="status"></div>
+        
+        <div class="data-status">
+            <div id="diffContainer" class="diff-box" style="display: none;">
+                <h3>⚠️ Pending Changes</h3>
+                <ul id="diffList"></ul>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <div class="creator-container">
+                Created by <span class="creator-name">Feniks</span>
+            </div>
+            <a href="https://buymeacoffee.com/selcukuygur" target="_blank" class="donate-button">
+                <img src="https://cdn.buymeacoffee.com/buttons/bmc-new-btn-logo.svg" alt="BMC" class="bmc-icon">
+                Buy me a coffee
+            </a>
+        </div>
+    </div>
+    <script type="module" src="popup.js"></script>
+</body>
+</html>
