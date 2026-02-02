@@ -1,16 +1,8 @@
-/**
- * Generates a system prompt based on the user's anime list.
- * @param {Object} data - The user data from storage.
- * @returns {string} - The formatted prompt.
- */
 export function buildSystemPrompt(data) {
     const username = data.mal_username || 'Kullanıcı';
     const watching = data.anime_list_watching || [];
     const completed = data.anime_list_completed || [];
 
-    // Filter relevant watching data (e.g., sort by last updated if available, or just take slice)
-    // For now, we take first 15 to avoid token limits, assumming API returns interesting ones first.
-    // Ideally we would want recently updated.
     const activeAnime = watching.slice(0, 15).map(anime => {
         const title = anime.node.title;
         const progress = anime.list_status.num_episodes_watched;

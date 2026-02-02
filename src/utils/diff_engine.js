@@ -1,9 +1,4 @@
-/**
- * Diff Engine for Gemini-MAL Bridge
- * Compares old and new anime lists to detect specific changes.
- */
-
-export function calculateDiff(oldList, newList) {
+export function calculateDiff(oldList, newList, cutoffDate = null) {
     const diffReport = {
         updates: [],
         new_entries: [],
@@ -12,29 +7,35 @@ export function calculateDiff(oldList, newList) {
     };
 
     if (!oldList || oldList.length === 0) {
-        // First run or empty cache: everything is "new" but we might not want to spam.
-        // Let's treat it as no diff to avoid initial explosion, OR just sync silently.
-        // Better: Return empty diff, let the full list be the context context.
+        if (cutoffDate) {
+             const cutoffTime = new Date(cutoffDate).getTime();
+             newList.forEach(item => {
+                 const itemTime = item.raw_updated_at ? new Date(item.raw_updated_at).getTime() : 0;
+                 if (itemTime > cutoffTime) {
+                     diffReport.new_entries.push(item);
+                     diffReport.has_changes = true;
+                 }
+             });
+        }
         return diffReport; 
     }
 
-    // Map old list by ID for fast lookup
     const oldMap = new Map(oldList.map(item => [item.id, item]));
+    const cutoffTime = cutoffDate ? new Date(cutoffDate).getTime() : 0;
 
     for (const newItem of newList) {
         const oldItem = oldMap.get(newItem.id);
+        const itemTime = newItem.raw_updated_at ? new Date(newItem.raw_updated_at).getTime() : 0;
+        const isRecentlyUpdated = cutoffDate && itemTime > cutoffTime;
 
         if (!oldItem) {
-            // New Entry found
             diffReport.new_entries.push(newItem);
             diffReport.has_changes = true;
             continue;
         }
 
-        // Check for updates
         const changes = [];
 
-        // 1. Episode Progress
         if (newItem.episodes_watched !== oldItem.episodes_watched) {
             changes.push({
                 field: 'episodes_watched',
@@ -43,7 +44,6 @@ export function calculateDiff(oldList, newList) {
             });
         }
 
-        // 2. Score
         if (newItem.score !== oldItem.score) {
             changes.push({
                 field: 'score',
@@ -52,13 +52,20 @@ export function calculateDiff(oldList, newList) {
             });
         }
 
-        // 3. Status
         if (newItem.status !== oldItem.status) {
             changes.push({
                 field: 'status',
                 old: oldItem.status,
                 new: newItem.status
             });
+        }
+
+        if (changes.length === 0 && isRecentlyUpdated) {
+             changes.push({
+                 field: 'metadata',
+                 old: null,
+                 new: 'updated'
+             });
         }
 
         if (changes.length > 0) {
@@ -80,33 +87,45 @@ export function calculateDiff(oldList, newList) {
 function generateSummary(diff) {
     const lines = [];
 
-    // New Entries
     diff.new_entries.forEach(item => {
-        lines.push(`🆕 **${item.title}** listeye eklendi (${item.status}).`);
+        if (item.status === 'completed') {
+            lines.push(`🎉 **${item.title}** successfully completed!`);
+        } else if (item.status === 'watching') {
+            lines.push(`▶️ **${item.title}** started watching.`);
+        } else if (item.status === 'plan_to_watch') {
+            lines.push(`📑 **${item.title}** added to plan to watch.`);
+        } else {
+            lines.push(`🆕 **${item.title}** added to list (${item.status}).`);
+        }
     });
 
-    // Updates
     diff.updates.forEach(update => {
         const anime = update.anime;
         const changeParts = [];
+        let statusChangedToCompleted = false;
 
         update.changes.forEach(c => {
             if (c.field === 'episodes_watched') {
-                changeParts.push(`Bölüm: ${c.old} -> **${c.new}**`);
+                changeParts.push(`Ep: ${c.old} -> **${c.new}**`);
             } else if (c.field === 'score') {
                 const oldScore = c.old === 0 ? '-' : c.old;
                 const newScore = c.new === 0 ? '-' : c.new;
-                changeParts.push(`Puan: ${oldScore} -> **${newScore}**`);
+                changeParts.push(`Score: ${oldScore} -> **${newScore}**`);
             } else if (c.field === 'status') {
-                changeParts.push(`Durum: ${c.old} -> **${c.new}**`);
+                if (c.new === 'completed') {
+                    statusChangedToCompleted = true;
+                }
+                changeParts.push(`Status: ${c.old} -> **${c.new}**`);
+            } else if (c.field === 'metadata') {
+                changeParts.push(`Metadata updated`);
             }
         });
 
-        // Context Metadata (Genres, Studio, Rank)
-        // Note: item should have these if normalized correctly.
-        // We will assume normalizer passes them through.
-        
-        lines.push(`📝 **${anime.title}**: ${changeParts.join(', ')}`);
+        if (statusChangedToCompleted) {
+             lines.push(`🎉 **${anime.title}** successfully completed! (${changeParts.join(', ')})`);
+        } else {
+             lines.push(`📝 **${anime.title}**: ${changeParts.join(', ')}`);
+        }
     });
 
     return lines.join('\n');

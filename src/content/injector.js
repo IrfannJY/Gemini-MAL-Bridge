@@ -1,8 +1,6 @@
-// Injector Script for Gemini
 const TRIGGER_KEYWORD = '#anime';
-let contextInjected = false; // Flag for shadow injection
+let contextInjected = false; 
 
-// Cached Configuration for Synchronous Checks
 let bridgeConfig = {
     mal_username: null,
     target_url: null,
@@ -12,11 +10,9 @@ let bridgeConfig = {
     ready: false
 };
 
-// Initialize Cache
 console.log('Gemini-MAL Bridge: Injector started');
 updateConfig();
 
-// Listen for updates
 chrome.storage.onChanged.addListener((changes, namespace) => {
     if (namespace === 'local') {
         updateConfig();
@@ -26,12 +22,10 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
 function updateConfig() {
     chrome.storage.local.get(null, (result) => {
         bridgeConfig = { ...bridgeConfig, ...result, ready: true };
-        // console.log('Gemini-MAL Bridge: Config updated', bridgeConfig);
     });
 }
 
 async function getStoredData() {
-    // Safety check for orphaned scripts (Extension context invalidated)
     if (!chrome.runtime?.id) {
         console.warn('Gemini-MAL Bridge: Extension context invalidated. Please reload the page.');
         return null; 
@@ -54,90 +48,64 @@ async function getStoredData() {
     });
 }
 
-// ... helper functions (generatePrompt, etc. - ensure they use the passed data or config) ...
-
-// Global Keydown Listener
-// Using { capture: true } to intercept event BEFORE Gemini's listeners
 document.addEventListener('keydown', async (e) => {
     
-    // 1. Ignore simulated events (our re-dispatches) to prevent loops
     if (!e.isTrusted) return;
 
-    // 2. Only care about Enter (No Shift)
     if (e.key !== 'Enter' || e.shiftKey) return;
 
-    // 3. Early Exit if Config not ready
     if (!bridgeConfig.ready) return;
 
-    // 4. URL Scope Check (Synchronous)
     if (bridgeConfig.target_url) {
         const current = window.location.href.toLowerCase();
         const target = bridgeConfig.target_url.toLowerCase().replace(/\/$/, '');
         if (!current.startsWith(target)) return;
     } else {
-        // If no target URL set, maybe we shouldn't run globally to be safe?
-        // Or we assume the user wants it everywhere if they installed it.
-        // Let's be safe: if no URL, don't block.
         return; 
     }
 
-    // 5. Target Check
     const target = e.target.closest('div[contenteditable="true"], textarea, input');
     if (!target) return;
 
-    // 6. Data Check
     if (!bridgeConfig.anime_list_watching) return;
 
     const userMessage = target.innerText || target.value || '';
     if (!userMessage.trim()) return;
 
-    // --- DECISION: CHECK HASH BEFORE BLOCKING ---
-    // --- DETECT COMMANDS ---
-    // #plan2w, #plan2w50, #anime
     const planMatch = userMessage.match(/#plan2w(\d*)/i);
     const forceAnime = userMessage.match(/#anime/i);
 
     if (planMatch) {
-         // --- PLAN COMMAND ---
          e.preventDefault();
          e.stopPropagation();
          
          const limit = planMatch[1] ? parseInt(planMatch[1], 10) : 50;
          console.log(`Gemini-MAL Bridge: Command #plan2w detected (Limit: ${limit})`);
 
-         // const { generatePlanToWatchPrompt } = await import(chrome.runtime.getURL('src/utils/formatter.js'));
-         // Retrieve PTW list
          chrome.storage.local.get(['anime_list_plan_to_watch'], (res) => {
              const ptw = res.anime_list_plan_to_watch || [];
-             // Detect Language (Preference > Browser)
              const pref = bridgeConfig.preferred_language || 'auto';
              const userLang = (pref === 'auto') ? (navigator.language || 'en') : pref;
              
              const shadowPrompt = generatePlanToWatchPrompt(ptw, limit, userLang);
              
-             // Remove command from user message? Or keep it? 
-             // Usually better to remove the command keyword or replace it.
-             // Replacing command with empty string for user message part, but we inject context.
-             // Replacing command with empty string for user message part, but we inject context.
              const cleanMessage = userMessage.replace(/#plan2w(\d*)/i, '').trim() || "What do you think about my Plan to Watch list?";
              
-             handleEnterLogic(target, cleanMessage, shadowPrompt, null); // Null diff, force inject
+             handleEnterLogic(target, cleanMessage, shadowPrompt, null);
          });
          return;
     }
 
     if (forceAnime) {
-        // --- FORCE ANIME CONTEXT COMMAND ---
         e.preventDefault();
         e.stopPropagation();
         
         console.log('Gemini-MAL Bridge: Command #anime detected. Forcing full context.');
         
-        // Detect Language (Preference > Browser)
         const pref = bridgeConfig.preferred_language || 'auto';
         const userLang = (pref === 'auto') ? (navigator.language || 'en') : pref;
         
-        const shadowPrompt = generateShadowPrompt(bridgeConfig, userLang); // Pass Language
+        const shadowPrompt = generateShadowPrompt(bridgeConfig, userLang);
         
         const cleanMessage = userMessage.replace(/#anime/i, '').trim() || "What do you think about my anime profile?";
         
@@ -145,29 +113,19 @@ document.addEventListener('keydown', async (e) => {
         return;
     }
 
-    // --- DIFFING LOGIC (EVENT BASED) ---
-    // We access the data directly from the bridgeConfig cache which is kept in sync via storage listener
     const pendingDiff = bridgeConfig.pending_changes;
-
-    // Check if we have pending changes to inject.
-    // If NO pending changes => Silent Mode (Do nothing).
     if (!pendingDiff || !pendingDiff.has_changes) {
         console.log('Gemini-MAL Bridge: No pending changes. Silent mode active.');
-        return; // EXIT: Normal Enter proceeds
+        return;
     }
 
     console.log('Gemini-MAL Bridge: Pending changes detected!', pendingDiff);
-
-    // !!! SHADOW INJECTION START !!!
     e.preventDefault(); 
     e.stopImmediatePropagation(); 
     e.stopPropagation();
 
-    // Generate Diff Prompt
-    // We use the summary text generated by diff engine, wrapped in context
     const diffSummary = pendingDiff.summary_text;
     
-    // Check Language (Preference > Browser)
     const pref = bridgeConfig.preferred_language || 'auto';
     const userLang = (pref === 'auto') ? (navigator.language || 'en') : pref;
     const isTurkish = userLang.startsWith('tr');
@@ -189,7 +147,6 @@ ${isTurkish ?
 
     console.log('Gemini-MAL Bridge: Injecting Shadow Prompt:\n', shadowPrompt);
 
-    // Pass calculated values to avoid re-calculation
     handleEnterLogic(target, userMessage, shadowPrompt, pendingDiff);
 
 }, { capture: true });
@@ -198,40 +155,34 @@ async function handleEnterLogic(target, userMessage, shadowPrompt, pendingDiff) 
     try {
         const finalPayload = userMessage + "\n\n" + shadowPrompt;
 
-        // Safe Inject using execCommand
         target.focus();
         document.execCommand('selectAll', false, null);
         document.execCommand('insertText', false, finalPayload);
-
-        // Update Snapshot (Commit Changes) if it was a Diff Injection
         if (pendingDiff) {
             const data = await getStoredData();
             if (data && data.latest_fetch) {
                 chrome.storage.local.set({ 
                     last_snapshot: data.latest_fetch,
-                    pending_changes: null // Clear pending
+                    last_snapshot_date: new Date().toISOString(), // Save timestamp of snapshot
+                    pending_changes: null
                 });
                 console.log('Gemini-MAL Bridge: Snapshot updated, queue cleared.');
             }
         }
         
-        // Visual Feedback (Success)
         flashSuccess(target);
 
-        // Trigger Send (Re-dispatch Enter + Click Fallback)
         setTimeout(() => {
             triggerSend(target);
-        }, 300); // Wait 300ms for send
+        }, 300);
 
     } catch (err) {
         console.error('Gemini-MAL Bridge: Error in logic:', err);
-        // Fallback
         triggerSend(target);
     }
 }
 
 function triggerSend(target) {
-    // 1. Re-dispatch Enter (Primary Method)
     const options = {
         key: 'Enter',
         code: 'Enter',
@@ -247,7 +198,6 @@ function triggerSend(target) {
     target.dispatchEvent(new KeyboardEvent('keypress', options));
     target.dispatchEvent(new KeyboardEvent('keyup', options));
 
-    // 2. Click Fallback (Safety mechanism)
     setTimeout(() => {
         if (!target.innerText || target.innerText.trim() === '') {
             console.log('Gemini-MAL Bridge: Input appears empty, assuming Enter worked. Skipping fallback click.');
@@ -292,30 +242,16 @@ function flashSuccess(target) {
         if (originalBorder) target.style.border = originalBorder;
     }, 1000);
 }
-// Manual Trigger logic (#anime) removed as per user request for cleanup
-
-
-// Redundant listener removed.
-
-// Helper: Franchise temizliği (Örn: "Dr. Stone: New World" -> "Dr. Stone")
 function cleanTitle(title) {
     return title.split(':')[0].split(' Season')[0].split(' Part')[0].trim();
 }
 
-/**
- * Generates the Shadow Prompt for Gemini.
- * Uses an English skeleton for better reasoning, with dynamic output language rules.
- * @param {Object} data - User data (watching, history, favorites).
- * @param {string} language - Target output language code ('tr', 'en', etc.). Default: 'tr'.
- */
 function generateShadowPrompt(data, language = 'tr') {
     const watching = data.anime_list_watching || [];
     const history = data.anime_list_history || [];
-    const favorites = data.anime_list_favorites || []; // Popup/Background'dan geliyor
+    const favorites = data.anime_list_favorites || [];
 
-    // --- 1. DYNAMIC LANGUAGE INSTRUCTION ---
     let languageInstruction = "";
-    // Check if language starts with 'tr' (e.g. 'tr-TR')
     if (language.startsWith('tr')) {
         languageInstruction = `
         - **OUTPUT LANGUAGE:** TURKISH (Türkçe).
@@ -330,7 +266,6 @@ function generateShadowPrompt(data, language = 'tr') {
         `;
     }
 
-    // 1. WATCHING
     const listText = watching.map(item => {
         const title = item.title;
         const watched = item.episodes_watched;
@@ -338,14 +273,12 @@ function generateShadowPrompt(data, language = 'tr') {
         return `- ${title}: Ep ${watched} ${score}`;
     }).join("\n");
 
-    // 2. FAVORITES
     const favText = favorites.map(item => {
         const title = item.node ? item.node.title : (item.title || "Unknown"); 
         const score = item.list_status ? item.list_status.score : (item.score || "?");
         return `- ${title} (Score: ${score} ⭐)`;
     }).join("\n");
 
-    // 3. HISTORY
     const seenFranchises = new Set();
     const historyText = history.reduce((acc, item) => {
         const simpleTitle = cleanTitle(item.title);
@@ -388,7 +321,6 @@ ${languageInstruction}
 function generatePlanToWatchPrompt(ptwList, limit = 50, language = 'tr') {
     if (!ptwList || ptwList.length === 0) return "No planned anime found.";
 
-    // --- DYNAMIC LANGUAGE INSTRUCTION ---
     let languageInstruction = "";
     if (language.startsWith('tr')) {
         languageInstruction = `
@@ -404,9 +336,6 @@ function generatePlanToWatchPrompt(ptwList, limit = 50, language = 'tr') {
         `;
     }
 
-    // Sort by Score (Desc) then Randomize slightly? 
-    // User asked for "Highest Score" logic.
-    // MAL API returns data wrapped in a 'node' object: { node: { title:..., mean:... } }
     const sorted = [...ptwList].sort((a, b) => {
         const meanA = a.node?.mean || 0;
         const meanB = b.node?.mean || 0;

@@ -1,8 +1,3 @@
-/**
- * Normalizes Anime Data for the Bridge.
- * Formats dates to DD.MM.YYYY and cleans up unnecessary fields.
- */
-
 export function normalizeAnimeData(watching, history) {
     return {
         watching: watching.map(normalizeItem),
@@ -14,8 +9,6 @@ function normalizeItem(item) {
     const status = item.list_status;
     const node = item.node;
 
-    // Resolve Date
-    // Priority: updated_at -> list_updated_at
     const rawDate = status.updated_at || status.list_updated_at;
     let formattedDate = "??.??.????";
 
@@ -39,7 +32,6 @@ function normalizeItem(item) {
         score: status.score,
         updated_at_formatted: formattedDate,
         raw_updated_at: rawDate,
-        // Extended Metadata
         mean: node.mean,
         rank: node.rank,
         genres: node.genres ? node.genres.map(g => g.name) : [],
